@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Get Your Key</title>
+    <script>
+      function generateKey() {
+        const key = Math.random().toString(36).substring(2, 10).toUpperCase();
+        document.getElementById("key").textContent = key;
+      }
+    </script>
+  </head>
+  <body onload="generateKey()" style="text-align:center; margin-top:50px;">
+    <h1>Your Script Key:</h1>
+    <h2 id="key">Loading...</h2>
+  </body>
+</html>
