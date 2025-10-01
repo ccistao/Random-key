@@ -1,0 +1,13 @@
+# In các số chẵn từ 10 đến 50
+print("Các số chẵn từ 10 đến 50:")
+for i in range(10, 51):
+    if i % 2 == 0:
+        print(i, end=" ")
+
+print()  # Xuống dòng
+
+# Tính tổng các số từ 10 đến 50
+tong = 0
+for i in range(10, 51):
+    tong += i
+print("Tổng các số từ 10 đến 50 là:", tong)
