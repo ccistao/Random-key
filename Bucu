@@ -245,15 +245,14 @@ task.spawn(function()
 							hrp.CFrame = CFrame.new(target.pos + Vector3.new(0, 1.2, 0))
 						end)
 
-						-- Dính liên tục cho tới khi nhặt được (hoặc timeout)
-						local timeout = tick() + 1
-						while target.instance and target.instance.Parent and tick() < timeout do
-							local prompt = getPrompt(target.instance)
-							if prompt then
-								pcall(function() fireproximityprompt(prompt) end)
-							end
-							task.wait(0.03)
-						end
+						-- Dính liên tục cho tới khi nhặt được (siêu nhanh)
+                           local timeout = tick() + 1.5
+                           while target.instance and target.instance.Parent and tick() < timeout do
+	                           local prompt = getPrompt(target.instance)
+                               if not prompt then break end -- nếu prompt biến mất (đã nhặt xong) thì dừng ngay
+	                           pcall(function() fireproximityprompt(prompt) end)
+	                           task.wait(0.03) -- tăng tốc nhặt nhanh hơn
+                            end
 					end
 				else
 					setStatus("🔎 Không thấy trái...", Color3.fromRGB(255,255,0))
