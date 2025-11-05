@@ -1,11 +1,9 @@
--- AutoFarm LocalScript (phiên bản có STATUS chuyên nghiệp, fix lỗi executor)
--- Dán vào StarterPlayerScripts hoặc PlayerGui (LocalScript)
+-- 🍇 AutoFarm PRO FIX - Không nhặt nhầm cây, nhặt dính sát, bán "Sell All"
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local workspace = workspace
 
--- ⚙️ Cấu hình
 local SCAN_INTERVAL = 0.1
 local SELL_COORDS = Vector3.new(-59, 5, 152)
 local rarityRank = {
@@ -14,9 +12,9 @@ local rarityRank = {
 }
 
 local fruitKeywords = {"fruit","apple","pear","orange","banana","berry","mango","melon","bomb"}
-local blacklist = {"visual","particle","effect","mesh","model","gui","hitbox","trail","spark"}
+local blacklist = {"tree","plant","sapling","visual","particle","effect","mesh","model","gui","hitbox","trail","spark"}
 
--- 🧱 Tạo GUI
+-- 🧱 GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "AutoFarmGUI"
 gui.ResetOnSpawn = false
@@ -30,14 +28,13 @@ frame.Active = true
 frame.Draggable = true
 frame.BorderSizePixel = 0
 frame.BackgroundTransparency = 0.1
-frame.ZIndex = 5
 frame.Parent = gui
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,-10,0,24)
 title.Position = UDim2.new(0,5,0,4)
 title.BackgroundTransparency = 1
-title.Text = "🍇 Auto Farm"
+title.Text = "🍇 Auto Farm PRO"
 title.TextColor3 = Color3.new(1,1,1)
 title.TextScaled = true
 title.Font = Enum.Font.SourceSansBold
@@ -51,7 +48,6 @@ toggleBtn.TextScaled = true
 toggleBtn.Font = Enum.Font.SourceSansSemibold
 toggleBtn.BackgroundColor3 = Color3.fromRGB(90,90,90)
 toggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
-toggleBtn.ZIndex = 6
 toggleBtn.Parent = frame
 
 local statusLabel = Instance.new("TextLabel")
@@ -76,16 +72,23 @@ toggleBtn.MouseButton1Click:Connect(function()
 	if enabled then
 		toggleBtn.Text = "✅ ON"
 		toggleBtn.BackgroundColor3 = Color3.fromRGB(50,150,50)
-		setStatus("🔍 Đang tìm trái...", Color3.fromRGB(255, 255, 0))
+		setStatus("🔍 Đang tìm trái...", Color3.fromRGB(255,255,0))
 	else
 		toggleBtn.Text = "🔄 OFF"
 		toggleBtn.BackgroundColor3 = Color3.fromRGB(90,90,90)
-		setStatus("⏸️ Đang tắt...", Color3.fromRGB(200, 200, 200))
+		setStatus("⏸️ Đang tắt...", Color3.fromRGB(200,200,200))
 	end
 end)
 
--- 🧩 Helpers
+-- 🧩 Helper
 local function strtolower(s) return tostring(s):lower() end
+
+local function hasPrompt(obj)
+	for _, d in ipairs(obj:GetDescendants()) do
+		if d:IsA("ProximityPrompt") then return true end
+	end
+	return false
+end
 
 local function isFruitObject(obj)
 	local n = strtolower(obj.Name)
@@ -97,28 +100,13 @@ local function isFruitObject(obj)
 	for _, bad in ipairs(blacklist) do
 		if n:find(bad) then return false end
 	end
-	return true
+	return hasPrompt(obj)
 end
 
 local function getRarity(obj)
-	local lower = tostring(obj.Name):lower()
 	for rName, _ in pairs(rarityRank) do
-		if lower:find(rName:lower()) then
+		if tostring(obj.Name):lower():find(rName:lower()) then
 			return rName
-		end
-	end
-
-	local ok, val = pcall(function()
-		return obj:GetAttribute("Rarity")
-	end)
-	if ok and val then
-		return tostring(val)
-	end
-
-	local c = obj:FindFirstChild("Rarity")
-	if c then
-		if c:IsA("StringValue") or c:IsA("ValueBase") then
-			return tostring(c.Value)
 		end
 	end
 	return "Unknown"
@@ -135,35 +123,17 @@ local function safeGetPosition(inst)
 	return nil
 end
 
-local function findProximityPrompt(obj)
+local function getPrompt(obj)
 	for _, d in ipairs(obj:GetDescendants()) do
 		if d:IsA("ProximityPrompt") then return d end
 	end
-	return nil
 end
 
-local function safeTriggerPrompt(prompt)
-	if not prompt or not prompt:IsA("ProximityPrompt") then return false end
-	local ok = pcall(function()
-		prompt:InputHoldBegin()
-		task.wait(0.25)
-		prompt:InputHoldEnd()
+local function triggerPromptOnce(prompt)
+	if not prompt or not prompt:IsA("ProximityPrompt") then return end
+	pcall(function()
+		fireproximityprompt(prompt)
 	end)
-	return ok
-end
-
-local function scanFruits()
-	local found = {}
-	for _, obj in ipairs(workspace:GetDescendants()) do
-		if isFruitObject(obj) then
-			local pos = safeGetPosition(obj)
-			if pos then
-				local r = getRarity(obj)
-				table.insert(found, {instance=obj, rarity=r, rank=rarityValue(r), pos=pos})
-			end 
-		end
-	end
-	return found
 end
 
 local function findInventory()
@@ -183,7 +153,7 @@ local function parseInventoryText(txt)
 	return 0, 2
 end
 
--- ⚡ AutoFarm loop
+-- ⚡ AutoFarm loop (đã tích hợp cơ chế "Sell All" an toàn nhất)
 task.spawn(function()
 	while true do
 		task.wait(SCAN_INTERVAL)
@@ -194,34 +164,96 @@ task.spawn(function()
 				cur, max = parseInventoryText(label.Text)
 			end
 
+			-- Nếu đầy -> TP về và kích hoạt Sell All (rất an toàn)
 			if cur >= max then
-				setStatus("💰 Đang bán tất cả...", Color3.fromRGB(0,255,0))
+				setStatus("💰 Bán tất cả...", Color3.fromRGB(0,255,0))
 				pcall(function()
-					player.Character.HumanoidRootPart.CFrame = CFrame.new(SELL_COORDS)
+					if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+						player.Character.HumanoidRootPart.CFrame = CFrame.new(SELL_COORDS)
+					end
 				end)
-				task.wait(0.3)
+				task.wait(0.35)
+
+				-- Tìm prompt "sell all" ưu tiên: kiểm tra Name, ActionText, ObjectText
+				local foundPrompt = nil
+				local sellPrompts = {}
+
 				for _, p in ipairs(workspace:GetDescendants()) do
-					if p:IsA("ProximityPrompt") and tostring(p.Name):lower():find("sell") then
-						safeTriggerPrompt(p)
-						break
+					if p:IsA("ProximityPrompt") then
+						local name = tostring(p.Name):lower()
+						local act = tostring(p.ActionText or ""):lower()
+						local obj = tostring(p.ObjectText or ""):lower()
+
+						-- Ưu tiên "sell all"
+						if name:find("sell all") or act:find("sell all") or obj:find("sell all") then
+							foundPrompt = p
+							break
+						end
+
+						-- Lưu các prompt có "sell" để fallback
+						if name:find("sell") or act:find("sell") or obj:find("sell") then
+							table.insert(sellPrompts, p)
+						end
 					end
 				end
+
+				-- Nếu tìm thấy "sell all" -> kích hoạt 1 lần
+				if foundPrompt then
+					pcall(function() fireproximityprompt(foundPrompt) end)
+				else
+					-- Nếu không, thử lần lượt các prompt "sell" (bấm tất cả để chắc chắn)
+					for _, p in ipairs(sellPrompts) do
+						pcall(function()
+							fireproximityprompt(p)
+						end)
+						task.wait(0.12)
+					end
+				end
+
 				task.wait(1)
 				setStatus("🔍 Đang tìm trái...", Color3.fromRGB(255,255,0))
+
 			else
-				local fruits = scanFruits()
-				table.sort(fruits, function(a,b) return a.rank > b.rank end)
+				-- Tìm trái rụng thật (lọc cây người chơi)
+				local fruits = {}
+				for _, obj in ipairs(workspace:GetChildren()) do
+					if isFruitObject(obj) and not tostring(obj.Name):lower():find("tree") then
+						local pos = safeGetPosition(obj)
+						if pos then
+							local rarity = getRarity(obj)
+							table.insert(fruits, {
+								instance = obj,
+								rarity = rarity,
+								rank = rarityValue(rarity),
+								pos = pos
+							})
+						end
+					end
+				end
+
+				-- Sắp xếp theo độ hiếm
+				table.sort(fruits, function(a, b) return a.rank > b.rank end)
 				local target = fruits[1]
+
 				if target then
 					setStatus("🍎 Nhặt "..(target.rarity or "Unknown").."...", Color3.fromRGB(100,200,255))
-					local pos = target.pos
-					if pos then
+					local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+
+					if hrp and target.pos then
 						pcall(function()
-							player.Character.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0,3,0))
+							-- Dính sát vào trái (đặt thấp hơn để prompt dễ detect)
+							hrp.CFrame = CFrame.new(target.pos + Vector3.new(0, 1.2, 0))
 						end)
-						local prompt = findProximityPrompt(target.instance)
-						if prompt then safeTriggerPrompt(prompt) end
-						task.wait(0.2)
+
+						-- Dính liên tục cho tới khi nhặt được (hoặc timeout)
+						local timeout = tick() + 4
+						while target.instance and target.instance.Parent and tick() < timeout do
+							local prompt = getPrompt(target.instance)
+							if prompt then
+								pcall(function() fireproximityprompt(prompt) end)
+							end
+							task.wait(0.1)
+						end
 					end
 				else
 					setStatus("🔎 Không thấy trái...", Color3.fromRGB(255,255,0))
@@ -230,5 +262,3 @@ task.spawn(function()
 		end
 	end
 end)
-
-print("✅ AutoFarm đã khởi động (phiên bản ổn định cho executor).")
