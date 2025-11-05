@@ -22,7 +22,7 @@ gui.Parent = player:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0,180,0,90)
-frame.Position = UDim2.new(0.5,-90,0.85,0)
+frame.Position = UDim2.new(0.5,-90,0.5,-45)
 frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
 frame.Active = true
 frame.Draggable = true
