@@ -246,13 +246,13 @@ task.spawn(function()
 						end)
 
 						-- Dính liên tục cho tới khi nhặt được (hoặc timeout)
-						local timeout = tick() + 4
+						local timeout = tick() + 1
 						while target.instance and target.instance.Parent and tick() < timeout do
 							local prompt = getPrompt(target.instance)
 							if prompt then
 								pcall(function() fireproximityprompt(prompt) end)
 							end
-							task.wait(0.1)
+							task.wait(0.03)
 						end
 					end
 				else
