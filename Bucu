@@ -91,16 +91,20 @@ local function hasPrompt(obj)
 end
 
 local function isFruitObject(obj)
-	local n = strtolower(obj.Name)
-	local ok = false
+	local n = tostring(obj.Name):lower()
+
 	for _, kw in ipairs(fruitKeywords) do
-		if n:find(kw) then ok = true break end
+		if n:find(kw) then
+			for _, bad in ipairs(blacklist) do
+				if n:find(bad) then return false end
+			end
+			if n:find("steal") or n:find("owned") or n:find("house") or n:find("plot") or n:find("private") then
+				return false
+			end
+			return hasPrompt(obj)
+		end
 	end
-	if not ok then return false end
-	for _, bad in ipairs(blacklist) do
-		if n:find(bad) then return false end
-	end
-	return hasPrompt(obj)
+	return false
 end
 
 local function getRarity(obj)
@@ -125,7 +129,14 @@ end
 
 local function getPrompt(obj)
 	for _, d in ipairs(obj:GetDescendants()) do
-		if d:IsA("ProximityPrompt") then return d end
+		if d:IsA("ProximityPrompt") then
+			local act = tostring(d.ActionText or ""):lower()
+			local objt = tostring(d.ObjectText or ""):lower()
+			if act:find("steal") or objt:find("steal") then
+				return nil
+			end
+			return d
+		end
 	end
 end
 
