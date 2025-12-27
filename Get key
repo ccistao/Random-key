@@ -225,12 +225,24 @@ GlowStroke.Transparency = 0.85
 GlowStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 task.spawn(function()
     while GlowStroke.Parent do
-        SmoothTween(GlowStroke, 1.2, { Transparency = 0.9 })
+        TweenService:Create(
+            GlowStroke,
+            TweenInfo.new(1.2, Enum.EasingStyle.Sine),
+            { Transparency = 0.9 }
+        ):Play()
+
         task.wait(1.2)
-        SmoothTween(GlowStroke, 1.2, { Transparency = 0.7 })
+
+        TweenService:Create(
+            GlowStroke,
+            TweenInfo.new(1.2, Enum.EasingStyle.Sine),
+            { Transparency = 0.65 }
+        ):Play()
+
         task.wait(1.2)
     end
 end)
+
 local TitleBar = CreateObject("Frame", {
     Name = "TitleBar",
     Parent = MainFrame,
