@@ -571,6 +571,25 @@ end
 
 SubmitButton.MouseButton1Click:Connect(validateKey)
 GetKeyButton.MouseButton1Click:Connect(openGetKey)
+task.spawn(function()
+    while VersionLabel.Parent do
+        TweenService:Create(
+            VersionLabel,
+            TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+            { TextTransparency = 0.4 }
+        ):Play()
+
+        task.wait(1.2)
+
+        TweenService:Create(
+            VersionLabel,
+            TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.In),
+            { TextTransparency = 1 }
+        ):Play()
+
+        task.wait(1.2)
+    end
+end)
 
 local dragging = false
 local dragInput
