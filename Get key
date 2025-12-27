@@ -242,6 +242,20 @@ CreateObject("UICorner", {
     CornerRadius = UDim.new(0, 8),
     Parent = TitleBar
 })
+local VersionLabel = CreateObject("TextLabel", {
+    Name = "VersionLabel",
+    Parent = MainFrame,
+    BackgroundTransparency = 1,
+    Size = UDim2.new(1, 0, 0, 14),
+    Position = UDim2.new(0.5, 0, 0, 34),
+    AnchorPoint = Vector2.new(0.5, 0),
+    Text = "v1.0.0",
+    Font = Enum.Font.Gotham,
+    TextSize = 11,
+    TextColor3 = Color3.fromRGB(255, 120, 120),
+    TextTransparency = 0.5,
+    TextXAlignment = Enum.TextXAlignment.Center
+})
 
 local CloseButton = CreateObject("TextButton", {
     Name = "CloseButton",
@@ -399,25 +413,6 @@ CreateObject("UICorner", {CornerRadius = UDim.new(0, 6), Parent = DiscordButton}
 AddClickImpact(SubmitButton)
 AddClickImpact(GetKeyButton)
 AddClickImpact(DiscordButton)
-
-local verText = Instance.new("TextLabel", DiscordButton.Parent)
-
-verText.Position = UDim2.new(0.5, 0, 1, 6) -- dưới nút Discord
-verText.AnchorPoint = Vector2.new(0.5, 0)
-verText.Size = UDim2.new(0.4, 0, 0.05, 0)
-
-verText.Text = "ver 1.0.0"
-verText.Font = Enum.Font.Gotham
-verText.TextColor3 = Color3.fromRGB(235,235,245)
-verText.TextTransparency = 0.35
-verText.BackgroundTransparency = 1
-verText.TextScaled = true
-
-local glow = Instance.new("UIStroke")
-glow.Parent = verText
-glow.Color = Color3.fromRGB(255,255,255)
-glow.Thickness = 1
-glow.Transparency = 0.65
 
 local StatusLabel = CreateObject("TextLabel", {
     Name = "StatusLabel",
